@@ -1,6 +1,5 @@
 package com.servicecops.project.services;
 
-import com.alibaba.fastjson2.JSONObject;
 import com.jet.moonlight.services.JetService;
 import com.servicecops.project.config.ApplicationConf;
 import com.servicecops.project.models.database.SystemRoleModel;
@@ -14,7 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -22,9 +20,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-@Service
 @Transactional
-public class UniversalService extends JetService {
+public abstract class UniversalService extends JetService {
     @Autowired
     private SystemRoleRepository roleRepository;
     @Autowired
@@ -81,36 +78,6 @@ public class UniversalService extends JetService {
             throw new IllegalStateException("UNKNOWN USER ROLE");
         }
         return rolesModel.get();
-    }
-
-    /**
-     * Given any list of attributes, and an object[in this case it can be the incoming request data]
-     * will check if they were provided otherwise will abort the request.
-     *
-     * @param fields Arraylist<String> - Field Keys to check for.
-     * @param request The object to check in
-     */
-    public void requires(List<String> fields, JSONObject request){
-        for (String field: fields){
-            if (!request.containsKey(field) || request.get(field) == null){
-                throw new IllegalArgumentException(field.replace("_"," ")+" cannot be empty");
-            }
-        }
-    }
-
-
-    /**
-     * Works as ```requires()``` above, but will check for only one field
-     * This will check for one field at a time
-     * @param field String - The key to look for
-     * @param request JSONObject - The object to check in
-     * @return true or false
-     */
-    public Boolean requires(String field, JSONObject request){
-        if (!request.containsKey(field) || request.get(field) == null){
-            throw new IllegalArgumentException(field.replace("_"," ")+" cannot be empty");
-        }
-        return true;
     }
 
     /**

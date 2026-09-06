@@ -1,3 +1,0 @@
--- start creating your first postgres function in here.
--- You can create an independent file for this too.
--- You literally can do anything!! but make sure all your procedure-files are this folder -- > procedures

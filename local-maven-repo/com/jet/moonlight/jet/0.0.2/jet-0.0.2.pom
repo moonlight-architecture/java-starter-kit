@@ -10,7 +10,7 @@
     <!-- Your package coordinates -->
     <groupId>com.jet.moonlight</groupId>
     <artifactId>jet</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <packaging>jar</packaging>
 
     <name>Moonlight Security</name>

@@ -18,7 +18,7 @@ import java.util.Collection;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "system_user", schema = "public", catalog = "project_db")
+@Table(name = "system_user", schema = "public")
 public class SystemUserModel implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "system_domain", schema = "public", catalog = "project_db")
+@Table(name = "system_domain", schema = "public")
 public class SystemDomainModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id

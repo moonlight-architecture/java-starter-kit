@@ -13,7 +13,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "system_role", schema = "public", catalog = "project_db")
+@Table(name = "system_role", schema = "public")
 public class SystemRoleModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id

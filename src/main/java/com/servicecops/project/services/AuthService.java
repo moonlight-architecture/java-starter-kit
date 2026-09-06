@@ -13,7 +13,6 @@ import com.jet.moonlight.services.JetResponse;
 import com.servicecops.project.config.ApplicationConf;
 import com.servicecops.project.config.JwtUtility;
 import com.servicecops.project.models.database.SystemUserModel;
-import com.servicecops.project.repositories.SystemRoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,7 +38,6 @@ public class AuthService extends UniversalService {
     private final AuthenticationManager authenticationManager;
     private final ApplicationConf userDetailService;
     private final JwtUtility jwtUtility;
-    private final SystemRoleRepository systemRoleRepository;
 
     @Doc(
             summary = "Log in",

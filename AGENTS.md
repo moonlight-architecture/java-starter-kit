@@ -4,9 +4,9 @@
 
 - **Type:** Spring Boot 4.1.0 application template
 - **Group:** `com.servicecops:project`
-- **Action routing:** Moonlight Java SDK `com.jet.moonlight:jet:0.0.1`
-- **Library source:** [java-sdk](../java-sdk)
-- **Remote:** https://github.com/moonlight-architecture/java-starter-kit
+- **Action routing:** Moonlight Java SDK `com.jet.moonlight:jet:0.0.2`
+- **Library source:** [java-sdk](https://github.com/moonlight-architecture/java-sdk)
+- **Repository:** https://github.com/moonlight-architecture/java-starter-kit
 
 ## Build commands
 
@@ -16,11 +16,11 @@ mvn clean package
 mvn clean compile
 ```
 
-Refresh the SDK after library changes:
+Refresh the SDK after library changes (from a [java-sdk](https://github.com/moonlight-architecture/java-sdk) checkout):
 
 ```bash
-cd ../java-sdk && mvn clean install
-cp target/jet-0.0.1.jar local-maven-repo/com/jet/moonlight/jet/0.0.1/   # from starter kit root
+mvn clean install
+cp target/jet-0.0.2.jar /path/to/java-starter-kit/local-maven-repo/com/jet/moonlight/jet/0.0.2/
 ```
 
 ## Architecture rules
@@ -64,5 +64,5 @@ cp target/jet-0.0.1.jar local-maven-repo/com/jet/moonlight/jet/0.0.1/   # from s
 
 ## Related projects
 
-- **Java SDK:** `../java-sdk` — action dispatch library; build and publish here first
-- **Setup CLI:** `../setup-script` — `moonlight new` / `check` / `update`
+- **Java SDK:** https://github.com/moonlight-architecture/java-sdk — action dispatch library; build and publish there first
+- **Setup CLI:** https://github.com/moonlight-architecture/setup-script — `moonlight new` / `run` / `setup`

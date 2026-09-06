@@ -1,19 +1,26 @@
 # Moonlight Java Starter Kit
 
-Spring Boot template using the **Moonlight Java SDK** for annotation-driven action routing instead of per-endpoint controllers.
+Spring Boot application template using the [Moonlight Java SDK](https://github.com/moonlight-architecture/java-sdk) for annotation-driven action routing instead of per-endpoint controllers.
 
-**Spring Boot:** 4.1.0  
-**Java:** 25 (LTS)  
-**Java SDK:** `com.jet.moonlight:jet:0.0.1` (local Maven repo)  
-**Library source:** [java-sdk](../java-sdk)  
-**Remote:** https://github.com/moonlight-architecture/java-starter-kit
+| | |
+|---|---|
+| **Spring Boot** | 4.1.0 |
+| **Java** | 25 (LTS) |
+| **Java SDK** | `com.jet.moonlight:jet:0.0.2` |
+| **Repository** | https://github.com/moonlight-architecture/java-starter-kit |
 
 ## Quick start
+
+Install the [Moonlight CLI](https://github.com/moonlight-architecture/setup-script) (macOS, Linux, or Windows Git Bash), then create a project:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/moonlight-architecture/setup-script/main/install.sh | bash
 moonlight new myapp
+cd myapp
+moonlight run
 ```
+
+On macOS and Linux you can also install with Homebrew (`moonlight-cli`). See the [CLI readme](https://github.com/moonlight-architecture/setup-script).
 
 Or clone this template and run:
 
@@ -21,7 +28,7 @@ Or clone this template and run:
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-Profiles: `dev`, `uat`, `prod` via `spring.profiles.active` in `application.properties`.
+Profiles: `dev`, `uat`, `prod` via `spring.profiles.active` in `application.properties`. Requires Java 25+ and PostgreSQL.
 
 ## Architecture
 
@@ -214,11 +221,11 @@ Avoid per-request logging in filters. Do not re-query the user from the database
 
 ## Refresh Java SDK dependency
 
-After building the library:
+From a checkout of [java-sdk](https://github.com/moonlight-architecture/java-sdk):
 
 ```bash
-cd ../java-sdk && mvn clean install
-cp target/jet-0.0.1.jar local-maven-repo/com/jet/moonlight/jet/0.0.1/   # from starter kit root
+mvn clean install
+cp target/jet-0.0.2.jar /path/to/java-starter-kit/local-maven-repo/com/jet/moonlight/jet/0.0.2/
 ```
 
 ## Configuration
@@ -236,8 +243,8 @@ Shared settings in `application.properties`; profile overrides in `application-{
 
 ## Dependencies
 
-- Spring Boot Web MVC (Jetty), JPA, Security, Mail (opt-in), Quartz, Thymeleaf
-- Moonlight Java SDK `jet:0.0.1`
+- Spring Boot Web MVC (Jetty), JPA, Security, Mail (opt-in), Thymeleaf
+- Moonlight Java SDK `jet:0.0.2`
 - PostgreSQL, Liquibase, JWT (jjwt 0.13), Fastjson2 2.0.64
 
 `com.jet.moonlight.util` (hash, crypto, signatures, SMS SPI, phone helpers) is on the classpath and is **not** auto-wired. Call it from an action when you need it. This template does not register an `SmsSender` or crypto bean.
@@ -246,10 +253,13 @@ Shared settings in `application.properties`; profile overrides in `application-{
 
 See [CHANGELOG.md](CHANGELOG.md). Git tags are the template version; Maven coordinates stay `0.0.1-SNAPSHOT`.
 
-**v0.0.1** ships Java SDK `0.0.1` (observers + `jet.api` routes; no action controller).
+**v0.0.2** ships Java SDK `0.0.2`, puts datasource defaults in `application.properties`, and drops unused template packages.
 
-### Run (IntelliJ)
+**v0.0.1** shipped Java SDK `0.0.1` (observers + `jet.api` routes; no action controller).
 
-- Project SDK must be 25+ (e.g. `openjdk-26`). Do not pin the Spring Boot run config to JDK 19.
+### Run from an IDE
+
+- Project SDK must be Java 25 or newer.
 - Optional VM option: `--sun-misc-unsafe-memory-access=allow` (Fastjson2 on JDK 25+)
+- Or from the project root: `moonlight run` / `moonlight run uat`
 
