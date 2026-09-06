@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="
+         http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Your package coordinates -->
+    <groupId>com.jet.moonlight</groupId>
+    <artifactId>jet</artifactId>
+    <version>0.0.1</version>
+    <packaging>jar</packaging>
+
+    <name>Moonlight Security</name>
+    <description>
+        Reusable Spring Boot annotation-driven action dispatch library with a boot-compiled
+        version/service/action registry and direct security policies.
+    </description>
+
+    <url>https://github.com/moonlight-architecture/java-sdk</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/mit/</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>jet</id>
+            <name>Jet Ezra</name>
+            <email>ezrajet9@gmail,com</email>
+        </developer>
+    </developers>
+
+    <properties>
+
+        <!-- Java version (current LTS) -->
+        <java.version>25</java.version>
+
+        <!-- Spring Boot (current OSS-supported line; Boot has no LTS designation) -->
+        <spring.boot.version>4.1.0</spring.boot.version>
+
+        <!-- Encoding -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    </properties>
+
+
+    <!-- Dependency Management -->
+    <dependencyManagement>
+        <dependencies>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+
+    <!-- Dependencies -->
+    <dependencies>
+
+        <!-- Spring Boot auto configuration -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+
+
+        <!-- Core Spring Context (version managed by Boot BOM) -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>2.0.64</version>
+        </dependency>
+
+
+        <!-- Optional servlet support -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Optional MVC for auto-injected /docs and path-based POST Try-it routes -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+
+    <!-- Build -->
+    <build>
+
+        <plugins>
+
+            <!-- Compiler plugin -->
+            <plugin>
+
+                <groupId>org.apache.maven.plugins</groupId>
+
+                <artifactId>maven-compiler-plugin</artifactId>
+
+                <version>3.14.0</version>
+
+                <configuration>
+
+                    <release>${java.version}</release>
+                    <parameters>true</parameters>
+
+                </configuration>
+
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.3</version>
+            </plugin>
+
+
+            <!-- Jar plugin -->
+            <plugin>
+
+                <groupId>org.apache.maven.plugins</groupId>
+
+                <artifactId>maven-jar-plugin</artifactId>
+
+                <version>3.4.2</version>
+
+                <configuration>
+
+                    <archive>
+
+                        <manifest>
+
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+
+                        </manifest>
+
+                    </archive>
+
+                </configuration>
+
+            </plugin>
+
+
+            <!-- Source jar plugin -->
+<!--            <plugin>-->
+
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+
+<!--                <artifactId>maven-source-plugin</artifactId>-->
+
+<!--                <version>3.3.0</version>-->
+
+<!--                <executions>-->
+
+<!--                    <execution>-->
+
+<!--                        <id>attach-sources</id>-->
+
+<!--                        <goals>-->
+
+<!--                            <goal>jar</goal>-->
+
+<!--                        </goals>-->
+
+<!--                    </execution>-->
+
+<!--                </executions>-->
+
+<!--            </plugin>-->
+
+
+        </plugins>
+
+    </build>
+
+
+</project>
