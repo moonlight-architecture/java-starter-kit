@@ -1,6 +1,7 @@
 package com.servicecops.project.config;
 
 import com.jet.moonlight.security.JetSecurityContext;
+import com.servicecops.project.models.database.SystemUserModel;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,5 +39,28 @@ public class SpringSecurityJetContext implements JetSecurityContext {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean hasRole(String role) {
+        SystemUserModel user = currentUser();
+        return user != null && role != null && role.equals(user.getRoleCode());
+    }
+
+    @Override
+    public boolean hasDomain(String domain) {
+        SystemUserModel user = currentUser();
+        return user != null
+                && user.getRoleDomain() != null
+                && domain != null
+                && domain.equals(user.getRoleDomain().name());
+    }
+
+    private SystemUserModel currentUser() {
+        if (!isAuthenticated()) {
+            return null;
+        }
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return principal instanceof SystemUserModel user ? user : null;
     }
 }

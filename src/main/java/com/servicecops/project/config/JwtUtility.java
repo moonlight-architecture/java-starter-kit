@@ -1,122 +1,126 @@
 package com.servicecops.project.config;
 
-import com.servicecops.project.models.database.SystemRoleModel;
 import com.servicecops.project.models.database.SystemUserModel;
-import com.servicecops.project.repositories.SystemRoleRepository;
 import com.servicecops.project.repositories.SystemUserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
 import java.sql.Timestamp;
-import java.util.*;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
-@Data
 public class JwtUtility {
 
     private final SystemUserRepository userRepository;
-    private final SystemRoleRepository roleRepository;
 
     @Value("${secret}")
     private String secret;
 
     public static final long JWT_TOKEN_VALIDITY = 12 * 60 * 60;
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
 
-    public Date extractIssuedAt(String token){
-        return extractClaim(token, Claims::getIssuedAt);
-    }
-
-    public String generateToken(UserDetails userDetails){
-        return generateToken(new HashMap<>(), userDetails);
-    }
-
-    public boolean isTokenValid(String token, SystemUserModel user) throws Exception {
-        final String username = extractUsername(token);
-        return username.equals(user.getUsername()) && !isTokenExpired(token, user);
+    public JwtUtility(SystemUserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     /**
-     * @implNote Will check for two things, if the token is expired as per eat claim
-     * and will also check of the user has already requested for another token, requesting for another token
-     * makes all the previously generated token expired.
-     *
-     * @param token jwt token
-     * @param user already-loaded user from the filter (avoids a duplicate DB read)
-     * @return Boolean
+     * Parses the JWT once and returns all claims. Prefer this on the request path
+     * instead of calling extract helpers repeatedly.
      */
-    private boolean isTokenExpired(String token, SystemUserModel usersModel) throws Exception {
-        if(extractExpiration(token).before(new Date())){
-            throw new Exception("SESSION EXPIRED");
-        } else if (usersModel.getLastLoggedInAt() == null) {
-            throw new IllegalStateException("INVALID TOKEN");
-        } else if (extractIssuedAt(token).after(usersModel.getLastLoggedInAt())) {
-            throw new Exception("EXPIRED TOKEN USED");
-        } else if (!usersModel.getIsActive()){
-            throw new Exception("ACCOUNT INACTIVE");
-        }
-        return false;
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
-
-    public String generateToken(Map<String, Object> claims, UserDetails userDetails){
-        // truck the last time the token was generated -- the last time the user logged in
-        long now = System.currentTimeMillis();
-        Timestamp stamp = new Timestamp(now);
-
-        SystemUserModel user = userRepository.findFirstByUsername(userDetails.getUsername());
-
-        // archived staff members should not login
-        user.setLastLoggedInAt(stamp);
-        userRepository.save(user);
-        Optional<SystemRoleModel> rolesModel = roleRepository.findFirstByRoleCode(user.getRoleCode());
-        SystemRoleModel role = rolesModel.get();
-        claims.put("role", role.getRoleName());
-        claims.put("role_code", role.getRoleCode());
-        claims.put("domain", role.getRoleDomain());
-        List<String> permissions = new ArrayList<>();
-        for (GrantedAuthority authority: userDetails.getAuthorities()){
-            if (!permissions.contains(authority.getAuthority())){
-                permissions.add(authority.getAuthority());
-            }
-        }
-        claims.put("permissions", permissions);
-        return Jwts
-                .builder()
-                .claims(claims)
-                .subject(userDetails.getUsername())
-                .issuedAt(user.getLastLoggedInAt())
-                .expiration(new Date(now + JWT_TOKEN_VALIDITY * 1000))
-                .signWith(getSigningKey())
-                .compact();
-    }
-
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver){
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
-
-    private Claims extractAllClaims(String token){
+    public Claims parseClaims(String token) {
         return Jwts
                 .parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    @Transactional
+    public String generateToken(SystemUserModel user) {
+        return generateToken(new HashMap<>(), user);
+    }
+
+    public boolean isTokenValid(String token, SystemUserModel user) {
+        return isTokenValid(parseClaims(token), user);
+    }
+
+    public boolean isTokenValid(Claims claims, SystemUserModel user) {
+        final String username = claims.getSubject();
+        if (username == null || !username.equals(user.getUsername())) {
+            return false;
+        }
+        assertSessionValid(claims, user);
+        return true;
+    }
+
+    /**
+     * Checks expiry, active flag, and token_version (single-session).
+     * {@code last_logged_in_at} is audit-only and is not used for revocation.
+     */
+    private void assertSessionValid(Claims claims, SystemUserModel user) {
+        Date expiration = claims.getExpiration();
+        if (expiration == null || expiration.before(new Date())) {
+            throw new IllegalStateException("SESSION EXPIRED");
+        }
+        if (!Boolean.TRUE.equals(user.getIsActive())) {
+            throw new IllegalStateException("ACCOUNT INACTIVE");
+        }
+        Object tvClaim = claims.get("tv");
+        int tokenVersion = user.getTokenVersion() == null ? 0 : user.getTokenVersion();
+        if (!(tvClaim instanceof Number number) || number.intValue() != tokenVersion) {
+            throw new IllegalStateException("EXPIRED TOKEN USED");
+        }
+    }
+
+    /**
+     * Issues a new JWT for an already-loaded user. Atomically increments
+     * {@code tokenVersion} so previous tokens stop working and concurrent logins
+     * cannot share a version.
+     */
+    @Transactional
+    public String generateToken(Map<String, Object> claims, SystemUserModel user) {
+        long now = System.currentTimeMillis();
+        Timestamp loggedInAt = new Timestamp(now);
+        int updated = userRepository.incrementTokenVersion(user.getId(), loggedInAt);
+        if (updated != 1) {
+            throw new IllegalStateException("Failed to bump token_version for user " + user.getId());
+        }
+        SystemUserModel refreshed = userRepository.getRequired(user.getId());
+        int nextVersion = refreshed.getTokenVersion() == null ? 0 : refreshed.getTokenVersion();
+        user.setTokenVersion(nextVersion);
+        user.setLastLoggedInAt(refreshed.getLastLoggedInAt());
+
+        claims.put("role", user.getRoleName());
+        claims.put("role_code", user.getRoleCode());
+        claims.put("domain", user.getRoleDomain() == null ? null : user.getRoleDomain().name());
+        claims.put("tv", nextVersion);
+        List<String> permissions = new ArrayList<>();
+        for (GrantedAuthority authority : user.getAuthorities()) {
+            String code = authority.getAuthority();
+            if (!permissions.contains(code)) {
+                permissions.add(code);
+            }
+        }
+        claims.put("permissions", permissions);
+        return Jwts
+                .builder()
+                .claims(claims)
+                .subject(user.getUsername())
+                .issuedAt(new Date(now))
+                .expiration(new Date(now + JWT_TOKEN_VALIDITY * 1000))
+                .signWith(getSigningKey())
+                .compact();
     }
 
     private SecretKey getSigningKey() {

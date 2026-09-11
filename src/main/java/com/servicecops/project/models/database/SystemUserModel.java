@@ -1,11 +1,18 @@
 package com.servicecops.project.models.database;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.servicecops.project.models.jpahelpers.enums.AppDomains;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -24,38 +31,41 @@ public class SystemUserModel implements UserDetails {
     @Id
     @Column(name = "id")
     private Long id;
-    @Basic
     @Column(name = "first_name")
     private String firstName;
-    @Basic
     @Column(name = "last_name")
     private String lastName;
-    @Basic
+    @JsonIgnore
     @Column(name = "password")
     private String password;
-    @Basic
     @Column(name = "email")
     private String email;
-    @Basic
     @Column(name = "username")
     private String username;
-    @Basic
     @Column(name = "role_code")
     private String roleCode;
-    @Basic
     @Column(name = "created_at")
     private Timestamp createdAt;
-    @Basic
     @Column(name = "last_logged_in_at")
     private Timestamp lastLoggedInAt;
-    @Basic
     @Column(name = "is_active")
     private Boolean isActive;
+    @Column(name = "token_version", nullable = false)
+    @Builder.Default
+    private Integer tokenVersion = 0;
 
     @Transient
+    @Builder.Default
     private Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
 
+    @Transient
+    private String roleName;
+
+    @Transient
+    private AppDomains roleDomain;
+
     @Override
+    @JsonIgnore
     public String getPassword() {
         return password;
     }
@@ -67,28 +77,30 @@ public class SystemUserModel implements UserDetails {
 
     @Override
     public Collection<SimpleGrantedAuthority> getAuthorities() {
-        //  we shall be setting these up when we login but for
-        //  now let's just maintain an empty array
         return authorities;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonExpired() {
-        return this.getIsActive();
+        return Boolean.TRUE.equals(this.getIsActive());
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonLocked() {
-        return this.getIsActive();
+        return Boolean.TRUE.equals(this.getIsActive());
     }
 
     @Override
+    @JsonIgnore
     public boolean isCredentialsNonExpired() {
-        return getIsActive();
+        return Boolean.TRUE.equals(getIsActive());
     }
 
     @Override
+    @JsonIgnore
     public boolean isEnabled() {
-        return getIsActive();
+        return Boolean.TRUE.equals(getIsActive());
     }
 }

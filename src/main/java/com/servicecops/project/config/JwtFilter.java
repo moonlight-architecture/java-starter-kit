@@ -3,6 +3,7 @@ package com.servicecops.project.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jet.moonlight.services.JetResponse;
 import com.servicecops.project.models.database.SystemUserModel;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -38,42 +39,42 @@ public class JwtFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userTag;
-        if (authHeader == null || !authHeader.startsWith("Bearer ")){
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
-        jwt = authHeader.substring(7);
+        final String jwt = authHeader.substring(7);
         try {
-
-        userTag = jwtUtility.extractUsername(jwt);
-        if (userTag != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            SystemUserModel userDetails = userDetailsService.loadUserByUsername(userTag);
-            if (userDetails == null){
-                throw new IllegalStateException("User not found");
+            Claims claims = jwtUtility.parseClaims(jwt);
+            String userTag = claims.getSubject();
+            if (userTag != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                SystemUserModel userDetails = userDetailsService.loadUserByUsername(userTag);
+                if (userDetails == null) {
+                    writeAuthFailed(response);
+                    return;
+                }
+                if (jwtUtility.isTokenValid(claims, userDetails)) {
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                }
             }
-            if (jwtUtility.isTokenValid(jwt, userDetails)){
-                // check if is_authority_admin and add that permission here
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authenticationToken.setDetails( new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            }
-        }
         } catch (ExpiredJwtException e) {
-            response.setStatus(HttpStatus.OK.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            mapper.writeValue(response.getWriter(), JetResponse.authFailed("TOKEN EXPIRED"));
+            writeAuthFailed(response);
             return;
-        } catch (Exception e){
-            response.setStatus(HttpStatus.OK.value());
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            mapper.writeValue(response.getWriter(), JetResponse.authFailed(e.getMessage()));
+        } catch (Exception e) {
+            writeAuthFailed(response);
             return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeAuthFailed(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpStatus.OK.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        mapper.writeValue(response.getWriter(), JetResponse.authFailed("USER AUTHENTICATION FAILED"));
     }
 
     @Override

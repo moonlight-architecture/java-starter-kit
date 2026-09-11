@@ -10,10 +10,10 @@
     <!-- Your package coordinates -->
     <groupId>com.jet.moonlight</groupId>
     <artifactId>jet</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
     <packaging>jar</packaging>
 
-    <name>Moonlight Security</name>
+    <name>Moonlight Java SDK</name>
     <description>
         Reusable Spring Boot annotation-driven action dispatch library with a boot-compiled
         version/service/action registry and direct security policies.
@@ -24,17 +24,24 @@
     <licenses>
         <license>
             <name>MIT License</name>
-            <url>https://opensource.org/license/mit/</url>
+            <url>https://opensource.org/licenses/MIT</url>
         </license>
     </licenses>
 
     <developers>
         <developer>
-            <id>jet</id>
-            <name>Jet Ezra</name>
-            <email>ezrajet9@gmail,com</email>
+            <id>moonlight</id>
+            <name>Moonlight Architecture</name>
+            <organization>Moonlight Architecture</organization>
+            <organizationUrl>https://github.com/moonlight-architecture</organizationUrl>
         </developer>
     </developers>
+
+    <scm>
+        <url>https://github.com/moonlight-architecture/java-sdk</url>
+        <connection>scm:git:https://github.com/moonlight-architecture/java-sdk.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/moonlight-architecture/java-sdk.git</developerConnection>
+    </scm>
 
     <properties>
 
@@ -156,6 +163,61 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.3</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.13</version>
+                <configuration>
+                    <!-- Optional helpers + OpenAPI UI are not on the action hot path. -->
+                    <excludes>
+                        <exclude>com/jet/moonlight/util/**</exclude>
+                        <exclude>com/jet/moonlight/docs/**</exclude>
+                        <exclude>com/jet/moonlight/api/**</exclude>
+                        <exclude>com/jet/moonlight/autoconfigure/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.75</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.55</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
 

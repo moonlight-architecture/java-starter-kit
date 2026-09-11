@@ -1,6 +1,7 @@
 package com.servicecops.project.services;
 
 import com.jet.moonlight.annotations.Action;
+import com.jet.moonlight.annotations.Authenticated;
 import com.jet.moonlight.annotations.Doc;
 import com.jet.moonlight.annotations.Field;
 import com.jet.moonlight.annotations.FieldFormat;
@@ -8,16 +9,19 @@ import com.jet.moonlight.annotations.FieldType;
 import com.jet.moonlight.annotations.JetFields;
 import com.jet.moonlight.annotations.MarkedAsJetService;
 import com.jet.moonlight.annotations.PostOnly;
+import com.jet.moonlight.annotations.RateLimit;
 import com.jet.moonlight.services.JetRequest;
 import com.jet.moonlight.services.JetResponse;
-import com.servicecops.project.config.ApplicationConf;
 import com.servicecops.project.config.JwtUtility;
 import com.servicecops.project.models.database.SystemUserModel;
+import com.servicecops.project.models.views.UserView;
+import com.servicecops.project.permissions.Perms;
+import com.servicecops.project.permissions.RequiresPermission;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -36,7 +40,6 @@ import java.util.Map;
 @MarkedAsJetService(name = "auth", description = "Authentication — login and identity")
 public class AuthService extends UniversalService {
     private final AuthenticationManager authenticationManager;
-    private final ApplicationConf userDetailService;
     private final JwtUtility jwtUtility;
 
     @Doc(
@@ -88,22 +91,42 @@ public class AuthService extends UniversalService {
             )
     })
     @PostOnly
+    @RateLimit(limit = 5, windowSeconds = 60)
     @Action(name = "login")
-    public JetResponse login(JetRequest request){
-        String username= request.getString("username");
-        String password= request.getString("password");
+    public JetResponse login(JetRequest request) {
+        String username = request.getString("username");
+        String password = request.getString("password");
 
-        authenticationManager.authenticate(
+        Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
         );
 
-        final SystemUserModel userDetails = userDetailService.loadUserByUsername(username);
-        final String token = jwtUtility.generateToken(userDetails);
+        SystemUserModel user = (SystemUserModel) authentication.getPrincipal();
+        String token = jwtUtility.generateToken(user);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token); // this is the jwt token the user can user from now on.
-        response.put("user", userDetails);
+        return JetResponse.ok(String.format("Welcome back, %s", user.getLastName()))
+                .withData(Map.of(
+                        "token", token,
+                        "user", UserView.from(user)
+                ));
+    }
 
-        return JetResponse.ok(String.format("Welcome back, %s", userDetails.getLastName())).withData(response);
+    @Doc(
+            summary = "Current user",
+            description = """
+                    Returns the authenticated principal as a safe profile view.
+                    Requires Bearer JWT and `USERS_VIEW`.
+                    """,
+            tags = {"Authentication"},
+            responseDescription = "Authenticated user profile",
+            responseExample = """
+                    {"id":1,"username":"admin","firstName":"System","lastName":"Admin","roleCode":"ADMINISTRATOR","domain":"BACK_OFFICE"}
+                    """
+    )
+    @Authenticated
+    @RequiresPermission(Perms.USERS_VIEW)
+    @Action(name = "me")
+    public JetResponse me(JetRequest request) {
+        return JetResponse.okData(UserView.from(authenticatedUser()));
     }
 }

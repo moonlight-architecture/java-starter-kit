@@ -19,7 +19,15 @@ public class JetRepositoryImpl<T, ID extends Serializable>
 
     @Override
     @Transactional
-    public void refresh(T t) {
-        entityManager.refresh(t);
+    public void refresh(T entity) {
+        entityManager.refresh(entity);
+    }
+
+    @Override
+    @Transactional
+    public T saveAndRefresh(T entity) {
+        T saved = saveAndFlush(entity);
+        entityManager.refresh(saved);
+        return saved;
     }
 }

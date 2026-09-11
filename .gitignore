@@ -28,8 +28,10 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+### VS Code / Cursor / OS ###
 .vscode/
+.cursor/
+.DS_Store
 
 ### Secrets and local overrides (never commit) ###
 .env
@@ -46,3 +48,13 @@ credentials.json
 *.key
 id_rsa
 id_ed25519
+
+### Local stress harness (never commit) ###
+/stress-app/
+
+### Local Maven noise ###
+local-maven-repo/**/_remote.repositories
+local-maven-repo/**/*.lastUpdated
+
+### Template ships no tests (coverage lives in java-sdk) ###
+/src/test/
